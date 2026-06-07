@@ -17,8 +17,8 @@
                     },
                     colors: {
                         slate: {
-                            850: '#1e293b',
-                            950: '#020617',
+                            850: '#151f32',
+                            950: '#030712',
                         }
                     }
                 }
@@ -34,35 +34,36 @@
     <style>
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #020617 0%, #0f172a 40%, #1e1b4b 100%);
+            background: linear-gradient(135deg, #030712 0%, #0b1528 50%, #161233 100%);
             background-attachment: fixed;
         }
         .glass {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(3, 7, 18, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
         .glass-card {
-            background: rgba(30, 41, 59, 0.45);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(21, 31, 50, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .glass-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(99, 102, 241, 0.2);
-            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 15px 35px -10px rgba(99, 102, 241, 0.25);
+            background: rgba(21, 31, 50, 0.45);
         }
         .terminal-scroll::-webkit-scrollbar {
             width: 6px;
         }
         .terminal-scroll::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.3);
+            background: rgba(3, 7, 18, 0.3);
         }
         .terminal-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             border-radius: 4px;
         }
         .tab-btn {
@@ -76,67 +77,79 @@
             left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, #6366f1, #a855f7);
+            background: linear-gradient(90deg, #6366f1, #c084fc);
             border-radius: 9999px;
+        }
+        .glow-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+            pointer-events: none;
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col antialiased">
+<body class="text-slate-100 min-h-screen flex flex-col antialiased relative">
+
+    <!-- Ambient background mesh -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-600/10 blur-[160px]"></div>
+        <div class="absolute -bottom-[20%] -right-[5%] w-[50%] h-[60%] rounded-full bg-purple-600/10 blur-[140px]"></div>
+    </div>
 
     <!-- Header Section -->
-    <header class="glass sticky top-0 z-40 border-b border-slate-800/80 px-6 py-4 shadow-lg">
+    <header class="glass sticky top-0 z-40 border-b border-slate-900 px-6 py-4 shadow-xl">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <!-- Logo & Brand -->
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                    <i class="fa-solid fa-server text-white text-lg"></i>
+            <div class="flex items-center gap-3.5">
+                <div class="h-11 w-11 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-server text-white text-xl"></i>
                 </div>
                 <div>
-                    <h1 id="main-title" class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-100 bg-clip-text text-transparent">Apt-Cacher NG</h1>
-                    <p class="text-xs text-slate-400 font-medium flex items-center gap-2">
+                    <h1 id="main-title" class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-100 to-slate-200 bg-clip-text text-transparent">Apt-Cacher NG</h1>
+                    <p class="text-xs text-slate-400 font-medium flex items-center gap-2 mt-0.5">
                         <span>LXC Container Gateway</span>
-                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="cacher-ip">192.168.1.199:3142</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="cacher-ip" class="font-mono text-slate-300">192.168.1.199:3142</span>
                     </p>
                 </div>
             </div>
 
             <!-- Status & Quick Controls -->
-            <div class="flex items-center gap-4 flex-wrap">
-                <div class="px-3 py-1.5 rounded-full glass border border-slate-800 flex items-center gap-2 text-xs">
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="px-3.5 py-2 rounded-xl glass border border-slate-800/80 flex items-center gap-2.5 text-xs">
                     <span class="text-slate-400">Server Status:</span>
-                    <span id="status-badge" class="font-semibold flex items-center gap-1.5 text-emerald-400">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online
+                    <span id="status-badge" class="font-bold flex items-center gap-2 text-emerald-400">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span> Online
                     </span>
                 </div>
                 
-                <button id="btn-restart" onclick="restartService()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 hover:border-slate-600 transition-all text-xs font-semibold flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrows-rotate"></i> Restart Service
+                <button id="btn-restart" onclick="openRestartModal()" class="px-3.5 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-slate-600 transition-all text-xs font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate text-amber-400"></i> Restart Service
                 </button>
                 
-                <button id="btn-force-recount" onclick="triggerAction('count')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all text-xs font-semibold flex items-center gap-1.5">
-                    <i class="fa-solid fa-calculator"></i> Re-count Stats
+                <button id="btn-force-recount" onclick="triggerAction('count')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/15 hover:shadow-indigo-500/25 transition-all text-xs font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-indigo-200"></i> Re-count Stats
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Content Wrapper -->
-    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
+    <main class="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
         
         <!-- Tab Navigation -->
-        <div class="flex border-b border-slate-800 mb-8 overflow-x-auto gap-8">
-            <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn active text-sm font-semibold tracking-wide text-indigo-400 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+        <div class="flex border-b border-slate-800/80 mb-8 overflow-x-auto gap-8">
+            <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn active text-sm font-bold tracking-wide text-indigo-400 pb-3.5 flex items-center gap-2.5">
+                <i class="fa-solid fa-chart-pie text-base"></i> Dashboard
             </button>
-            <button id="tab-logs" onclick="switchTab('logs')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-list-ul"></i> Live Logs
+            <button id="tab-logs" onclick="switchTab('logs')" class="tab-btn text-sm font-bold tracking-wide text-slate-400 hover:text-slate-200 pb-3.5 flex items-center gap-2.5">
+                <i class="fa-solid fa-terminal text-base"></i> Live Logs
             </button>
-            <button id="tab-maintenance" onclick="switchTab('maintenance')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance
+            <button id="tab-maintenance" onclick="switchTab('maintenance')" class="tab-btn text-sm font-bold tracking-wide text-slate-400 hover:text-slate-200 pb-3.5 flex items-center gap-2.5">
+                <i class="fa-solid fa-screwdriver-wrench text-base"></i> Maintenance
             </button>
-            <button id="tab-setup" onclick="switchTab('setup')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-circle-info"></i> Client Setup Guide
+            <button id="tab-setup" onclick="switchTab('setup')" class="tab-btn text-sm font-bold tracking-wide text-slate-400 hover:text-slate-200 pb-3.5 flex items-center gap-2.5">
+                <i class="fa-solid fa-circle-info text-base"></i> Client Setup Guide
             </button>
         </div>
 
@@ -146,58 +159,70 @@
             <!-- Highlight Statistics Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Hit Rate Card -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[145px]">
+                    <div class="glow-overlay"></div>
                     <div class="flex justify-between items-start">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cache Hit Rate</span>
-                        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cache Hit Rate</span>
+                        <div class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                             <i class="fa-solid fa-percent text-sm"></i>
                         </div>
                     </div>
                     <div class="mt-4">
                         <span id="stat-hit-rate" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-200 to-indigo-100 bg-clip-text text-transparent">0.00%</span>
-                        <p class="text-xs text-slate-400 mt-1">Based on package requests</p>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                            <div id="stat-hit-rate-bar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Bandwidth Saved Card -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[145px]">
+                    <div class="glow-overlay"></div>
                     <div class="flex justify-between items-start">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bandwidth Saved</span>
-                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bandwidth Saved</span>
+                        <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
                         </div>
                     </div>
                     <div class="mt-4">
                         <span id="stat-saved" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-200 to-emerald-100 bg-clip-text text-transparent">0.00 MiB</span>
-                        <p class="text-xs text-slate-400 mt-1">Data served from local cache</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle text-[6px] text-emerald-500 animate-pulse"></i> Data served from local cache
+                        </p>
                     </div>
                 </div>
 
                 <!-- Total Served Card -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[145px]">
+                    <div class="glow-overlay"></div>
                     <div class="flex justify-between items-start">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Served</span>
-                        <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                            <i class="fa-solid fa-share text-sm"></i>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Served</span>
+                        <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            <i class="fa-solid fa-share-nodes text-sm"></i>
                         </div>
                     </div>
                     <div class="mt-4">
                         <span id="stat-served" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-200 to-purple-100 bg-clip-text text-transparent">0 B</span>
-                        <p class="text-xs text-slate-400 mt-1">Served to local client machines</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                            Served to local client nodes
+                        </p>
                     </div>
                 </div>
 
                 <!-- Total Fetched Card -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[145px]">
+                    <div class="glow-overlay"></div>
                     <div class="flex justify-between items-start">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Upstream Fetched</span>
-                        <div class="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Upstream Fetched</span>
+                        <div class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
                             <i class="fa-solid fa-arrow-down-up-lock text-sm"></i>
                         </div>
                     </div>
                     <div class="mt-4">
                         <span id="stat-fetched" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-200 to-rose-100 bg-clip-text text-transparent">0 B</span>
-                        <p class="text-xs text-slate-400 mt-1">Downloaded from internet mirrors</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                            Downloaded from internet mirrors
+                        </p>
                     </div>
                 </div>
             </div>
@@ -206,26 +231,30 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Doughnut Chart (Hit vs Miss) -->
                 <div class="glass-card p-6 rounded-2xl flex flex-col lg:col-span-1">
-                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Cache Hit vs Miss</h3>
-                    <div class="flex-grow flex items-center justify-center min-h-[200px] relative">
+                    <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-400"></i> Cache Hit vs Miss
+                    </h3>
+                    <div class="flex-grow flex items-center justify-center min-h-[220px] relative">
                         <canvas id="chart-hit-miss"></canvas>
                     </div>
-                    <div class="mt-4 grid grid-cols-2 text-center text-xs border-t border-slate-800 pt-4">
+                    <div class="mt-4 grid grid-cols-2 text-center text-xs border-t border-slate-800/60 pt-4">
                         <div>
-                            <span class="text-slate-400">Hits Count</span>
-                            <p id="chart-label-hits" class="text-base font-bold text-indigo-400">0</p>
+                            <span class="text-slate-400 font-medium">Hits Count</span>
+                            <p id="chart-label-hits" class="text-base font-bold text-indigo-400 mt-0.5">0</p>
                         </div>
-                        <div class="border-l border-slate-800">
-                            <span class="text-slate-400">Misses Count</span>
-                            <p id="chart-label-misses" class="text-base font-bold text-purple-400">0</p>
+                        <div class="border-l border-slate-800/60">
+                            <span class="text-slate-400 font-medium">Misses Count</span>
+                            <p id="chart-label-misses" class="text-base font-bold text-purple-400 mt-0.5">0</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bar Chart (Data flow details) -->
                 <div class="glass-card p-6 rounded-2xl flex flex-col lg:col-span-2">
-                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Bandwidth Distribution (Served vs Fetched)</h3>
-                    <div class="flex-grow min-h-[220px] relative">
+                    <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-indigo-400"></i> Bandwidth Distribution (Served vs Fetched)
+                    </h3>
+                    <div class="flex-grow min-h-[240px] relative">
                         <canvas id="chart-bandwidth"></canvas>
                     </div>
                 </div>
@@ -235,18 +264,20 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Top Clients -->
                 <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Top Client Nodes</h3>
+                    <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-indigo-400"></i> Top Client Nodes
+                    </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-xs text-slate-400 border-b border-slate-800/80">
-                                    <th class="pb-3 font-medium">IP Address</th>
-                                    <th class="pb-3 font-medium text-right">Data Cached</th>
+                                    <th class="pb-3 font-semibold">IP Address</th>
+                                    <th class="pb-3 font-semibold text-right">Data Cached</th>
                                 </tr>
                             </thead>
                             <tbody id="top-clients-list" class="divide-y divide-slate-800/50 text-sm">
                                 <tr>
-                                    <td class="py-3 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td>
+                                    <td class="py-4 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -255,18 +286,20 @@
 
                 <!-- Top Repositories -->
                 <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Top Repositories Requested</h3>
+                    <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-purple-400"></i> Top Repositories Requested
+                    </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-xs text-slate-400 border-b border-slate-800/80">
-                                    <th class="pb-3 font-medium">Repository Mirror</th>
-                                    <th class="pb-3 font-medium text-right">Request Count</th>
+                                    <th class="pb-3 font-semibold">Repository Mirror</th>
+                                    <th class="pb-3 font-semibold text-right">Request Count</th>
                                 </tr>
                             </thead>
                             <tbody id="top-repos-list" class="divide-y divide-slate-800/50 text-sm">
                                 <tr>
-                                    <td class="py-3 text-slate-400" colspan="2">No requests logged yet.</td>
+                                    <td class="py-4 text-slate-400" colspan="2">No requests logged yet.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -277,31 +310,31 @@
 
         <!-- 2. LIVE LOGS VIEW -->
         <div id="view-logs" class="hidden glass-card rounded-2xl p-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-800/60 pb-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-200">Recent Proxy Activity</h2>
                     <p class="text-xs text-slate-400 mt-1">Real-time package requests passing through the cache server</p>
                 </div>
-                <div class="relative w-full md:w-64">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
-                    <input id="log-search" oninput="filterLogs()" type="text" placeholder="Search logs (IP, package, etc.)..." class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-slate-850 border border-slate-700/60 focus:outline-none focus:border-indigo-500 transition-all text-xs text-slate-200 placeholder-slate-500">
+                <div class="relative w-full md:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                    <input id="log-search" oninput="filterLogs()" type="text" placeholder="Search logs (IP, package, etc.)..." class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-800/60 border border-slate-700/50 focus:outline-none focus:border-indigo-500 transition-all text-xs text-slate-200 placeholder-slate-500">
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-[500px] overflow-y-auto terminal-scroll">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="text-xs text-slate-400 border-b border-slate-850 uppercase tracking-wider">
-                            <th class="pb-3 font-semibold">Timestamp</th>
+                        <tr class="text-xs text-slate-400 border-b border-slate-800/60 uppercase tracking-wider sticky top-0 bg-slate-900/90 backdrop-blur z-10">
+                            <th class="pb-3 font-semibold pl-2">Timestamp</th>
                             <th class="pb-3 font-semibold">Client IP</th>
                             <th class="pb-3 font-semibold">Type</th>
                             <th class="pb-3 font-semibold">Package / Path</th>
-                            <th class="pb-3 font-semibold text-right">Size</th>
+                            <th class="pb-3 font-semibold text-right pr-2">Size</th>
                         </tr>
                     </thead>
                     <tbody id="logs-tbody" class="divide-y divide-slate-850 text-xs">
                         <tr>
-                            <td class="py-4 text-center text-slate-400" colspan="5">No logs available.</td>
+                            <td class="py-6 text-center text-slate-400" colspan="5">No logs available.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -315,15 +348,15 @@
                 <!-- Expiration -->
                 <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                     <div>
-                        <div class="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-broom-ball"></i>
+                        <div class="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-broom-ball text-lg"></i>
                         </div>
                         <h3 class="text-base font-bold text-slate-200">Expiration & Cleanup</h3>
                         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
                             Scan the entire cache directory, check metadata, and remove package versions that are no longer referenced by index files.
                         </p>
                     </div>
-                    <button id="btn-expire" onclick="triggerAction('expire')" class="mt-6 w-full py-2 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs tracking-wider transition-all shadow-md shadow-violet-600/20 flex items-center justify-center gap-1.5">
+                    <button id="btn-expire" onclick="triggerAction('expire')" class="mt-6 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold text-xs tracking-wider transition-all shadow-lg shadow-violet-600/15 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-play"></i> Start Expiration
                     </button>
                 </div>
@@ -331,8 +364,8 @@
                 <!-- Unreferenced Packages -->
                 <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                     <div>
-                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-trash-can-arrow-up"></i>
+                        <div class="w-11 h-11 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-trash-can-arrow-up text-lg"></i>
                         </div>
                         <h3 class="text-base font-bold text-slate-200">Unreferenced Files</h3>
                         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -340,10 +373,10 @@
                         </p>
                     </div>
                     <div class="mt-6 grid grid-cols-2 gap-3">
-                        <button id="btn-show-unref" onclick="triggerAction('show_unreferenced')" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-eye"></i> Show
+                        <button id="btn-show-unref" onclick="triggerAction('show_unreferenced')" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-eye text-slate-400"></i> Show
                         </button>
-                        <button id="btn-remove-unref" onclick="triggerAction('remove_unreferenced')" class="py-2 px-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-pink-600/15">
+                        <button id="btn-remove-unref" onclick="triggerAction('remove_unreferenced')" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-pink-600/15">
                             <i class="fa-solid fa-trash"></i> Delete
                         </button>
                     </div>
@@ -352,8 +385,8 @@
                 <!-- Damaged Packages -->
                 <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                     <div>
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                         </div>
                         <h3 class="text-base font-bold text-slate-200">Damaged Package Check</h3>
                         <p class="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -361,10 +394,10 @@
                         </p>
                     </div>
                     <div class="mt-6 grid grid-cols-2 gap-3">
-                        <button id="btn-show-dmg" onclick="triggerAction('show_damaged')" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-eye"></i> Show
+                        <button id="btn-show-dmg" onclick="triggerAction('show_damaged')" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-eye text-slate-400"></i> Show
                         </button>
-                        <button id="btn-remove-dmg" onclick="triggerAction('remove_damaged')" class="py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-amber-600/15">
+                        <button id="btn-remove-dmg" onclick="triggerAction('remove_damaged')" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-amber-600/15">
                             <i class="fa-solid fa-trash"></i> Delete
                         </button>
                     </div>
@@ -375,12 +408,12 @@
             <div class="glass-card rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80">
                 <div class="bg-slate-950 px-4 py-3 flex items-center justify-between border-b border-slate-900">
                     <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                        <span class="ml-2 text-xs font-semibold text-slate-400 font-mono tracking-wider">maintenance_console.sh</span>
+                        <span class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_6px_#f43f5e]"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
+                        <span class="ml-2.5 text-xs font-semibold text-slate-400 font-mono tracking-wider">maintenance_console.sh</span>
                     </div>
-                    <span id="maintenance-loader" class="hidden text-xs text-indigo-400 flex items-center gap-2 font-semibold">
+                    <span id="maintenance-loader" class="hidden text-xs text-indigo-400 flex items-center gap-2 font-semibold animate-pulse">
                         <svg class="animate-spin h-3.5 w-3.5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -399,7 +432,7 @@
             <div class="glass-card p-6 rounded-2xl">
                 <h2 class="text-lg font-bold text-slate-200 mb-2">How to Use This Caching Server</h2>
                 <p class="text-xs text-slate-400 leading-relaxed">
-                    To save bandwidth and speed up updates across your Proxmox environment, you must configure your client VMs, LXCs, or the Proxmox host itself to route their package requests through this server.
+                    To save bandwidth and speed up updates across your environment, configure your client VMs, LXCs, or servers to route their package requests through this server.
                 </p>
             </div>
 
@@ -407,13 +440,13 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- OS Nav -->
                 <div class="md:col-span-1 flex flex-col gap-2">
-                    <button id="btn-setup-debian" onclick="switchSetupOS('debian')" class="px-4 py-3 rounded-xl bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/15 border border-indigo-500/20 text-left font-bold text-sm transition-all flex items-center gap-2">
+                    <button id="btn-setup-debian" onclick="switchSetupOS('debian')" class="px-4 py-3.5 rounded-xl bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/15 border border-indigo-500/20 text-left font-bold text-sm transition-all flex items-center gap-3">
                         <i class="fa-brands fa-debian text-base"></i> Debian / Ubuntu / PVE
                     </button>
-                    <button id="btn-setup-alpine" onclick="switchSetupOS('alpine')" class="px-4 py-3 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-2">
+                    <button id="btn-setup-alpine" onclick="switchSetupOS('alpine')" class="px-4 py-3.5 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-3">
                         <i class="fa-solid fa-leaf text-base"></i> Alpine Linux
                     </button>
-                    <button id="btn-setup-rpm" onclick="switchSetupOS('rpm')" class="px-4 py-3 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-2">
+                    <button id="btn-setup-rpm" onclick="switchSetupOS('rpm')" class="px-4 py-3.5 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-3">
                         <i class="fa-brands fa-redhat text-base"></i> Rocky / Alma / CentOS
                     </button>
                 </div>
@@ -430,24 +463,24 @@
                         </p>
                         
                         <div class="space-y-3">
-                            <label class="text-xs font-semibold text-slate-300">Run this single command as root on your client nodes:</label>
+                            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-[10px] text-slate-500"></i> Run this single command as root on your client nodes:</label>
                             <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
-                                <pre id="cmd-debian" class="whitespace-pre-wrap break-all">echo 'Acquire::http::Proxy "http://192.168.1.199:3142";' > /etc/apt/apt.conf.d/00aptproxy</pre>
-                                <button onclick="copyToClipboard('cmd-debian')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                <pre id="cmd-debian" class="whitespace-pre-wrap break-all pr-8">echo 'Acquire::http::Proxy "http://192.168.1.199:3142";' > /etc/apt/apt.conf.d/00aptproxy</pre>
+                                <button onclick="copyToClipboard('cmd-debian')" class="absolute right-3.5 top-3.5 text-slate-500 hover:text-indigo-400 transition-all text-sm" title="Copy to clipboard">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div class="space-y-3">
-                            <label class="text-xs font-semibold text-slate-300">Then run updates as usual. The cache will start building:</label>
+                            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-[10px] text-slate-500"></i> Then run updates as usual. The cache will start building:</label>
                             <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-emerald-400">
                                 apt-get update && apt-get upgrade -y
                             </div>
                         </div>
 
                         <div class="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-xs text-slate-400 leading-relaxed">
-                            <i class="fa-solid fa-circle-info text-indigo-400 mr-1"></i>
+                            <i class="fa-solid fa-circle-info text-indigo-400 mr-1.5"></i>
                             <strong>Note:</strong> APT package verification uses cryptographic signatures (`Release.gpg` keys). Routing packages through this proxy is completely secure since package integrity is checked by the client itself.
                         </div>
                     </div>
@@ -462,20 +495,20 @@
                         </p>
 
                         <div class="space-y-3">
-                            <label class="text-xs font-semibold text-slate-300">Option A: Run one-off package updates using the proxy variable:</label>
+                            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-[10px] text-slate-500"></i> Option A: Run one-off package updates using the proxy variable:</label>
                             <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
-                                <pre id="cmd-alpine-var" class="whitespace-pre-wrap break-all">http_proxy=http://192.168.1.199:3142 apk update && apk upgrade</pre>
-                                <button onclick="copyToClipboard('cmd-alpine-var')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                <pre id="cmd-alpine-var" class="whitespace-pre-wrap break-all pr-8">http_proxy=http://192.168.1.199:3142 apk update && apk upgrade</pre>
+                                <button onclick="copyToClipboard('cmd-alpine-var')" class="absolute right-3.5 top-3.5 text-slate-500 hover:text-indigo-400 transition-all text-sm" title="Copy to clipboard">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div class="space-y-3">
-                            <label class="text-xs font-semibold text-slate-300">Option B: Configure a permanent proxy in Alpine shell profile:</label>
+                            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-[10px] text-slate-500"></i> Option B: Configure a permanent proxy in Alpine shell profile:</label>
                             <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
-                                <pre id="cmd-alpine-perm" class="whitespace-pre-wrap break-all">echo 'export http_proxy=http://192.168.1.199:3142' >> /etc/profile</pre>
-                                <button onclick="copyToClipboard('cmd-alpine-perm')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                <pre id="cmd-alpine-perm" class="whitespace-pre-wrap break-all pr-8">echo 'export http_proxy=http://192.168.1.199:3142' >> /etc/profile</pre>
+                                <button onclick="copyToClipboard('cmd-alpine-perm')" class="absolute right-3.5 top-3.5 text-slate-500 hover:text-indigo-400 transition-all text-sm" title="Copy to clipboard">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
                             </div>
@@ -492,10 +525,10 @@
                         </p>
 
                         <div class="space-y-3">
-                            <label class="text-xs font-semibold text-slate-300">Add the proxy directive to your DNF/YUM configuration file:</label>
+                            <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-[10px] text-slate-500"></i> Add the proxy directive to your DNF/YUM configuration file:</label>
                             <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
-                                <pre id="cmd-rpm" class="whitespace-pre-wrap break-all">echo 'proxy=http://192.168.1.199:3142' >> /etc/dnf/dnf.conf</pre>
-                                <button onclick="copyToClipboard('cmd-rpm')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                <pre id="cmd-rpm" class="whitespace-pre-wrap break-all pr-8">echo 'proxy=http://192.168.1.199:3142' >> /etc/dnf/dnf.conf</pre>
+                                <button onclick="copyToClipboard('cmd-rpm')" class="absolute right-3.5 top-3.5 text-slate-500 hover:text-indigo-400 transition-all text-sm" title="Copy to clipboard">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
                             </div>
@@ -508,13 +541,40 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-auto py-6 border-t border-slate-800/60 glass text-center text-xs text-slate-400">
-        <div class="max-w-7xl mx-auto px-6">
-            Apt-Cacher NG Caching Proxy Dashboard • Running on Proxmox LXC Container
+    <footer class="border-t border-slate-900 bg-slate-950/40 py-6 px-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>Apt-Cacher NG Custom Dashboard Gateway &copy; 2026. Made with ❤️ for devops teams.</p>
+            <div class="flex gap-4">
+                <a href="https://github.com/sfdcai/apt-cacher-ng-advanced" target="_blank" class="hover:text-indigo-400 transition-colors flex items-center gap-1"><i class="fa-brands fa-github text-sm"></i> Repository</a>
+            </div>
         </div>
     </footer>
 
-    <!-- JavaScript logic -->
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+
+    <!-- Restart Modal -->
+    <div id="restart-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="glass-card max-w-md w-full p-6 rounded-2xl relative z-10 border border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-lg animate-pulse"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-200">Restart Caching Service?</h3>
+            <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                This will restart the Apt-Cacher NG daemon. Active package downloads from client machines may be interrupted.
+            </p>
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeRestartModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all">
+                    Cancel
+                </button>
+                <button id="modal-confirm-restart" onclick="confirmRestartService()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold text-xs transition-all shadow-md shadow-amber-600/20">
+                    Yes, Restart
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let hitMissChart = null;
         let bandwidthChart = null;
@@ -531,6 +591,37 @@
         document.getElementById('cmd-alpine-var').innerText = `http_proxy=http://${containerIp}:3142 apk update && apk upgrade`;
         document.getElementById('cmd-alpine-perm').innerText = `echo 'export http_proxy=http://${containerIp}:3142' >> /etc/profile`;
         document.getElementById('cmd-rpm').innerText = `echo 'proxy=http://${containerIp}:3142' >> /etc/dnf/dnf.conf`;
+
+        // Notification Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `glass-card p-4 rounded-xl flex items-center gap-3.5 shadow-xl border border-slate-800/80 translate-y-3 opacity-0 transition-all duration-300 max-w-sm`;
+            
+            let icon = '<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>';
+            if (type === 'error') {
+                icon = '<i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>';
+            } else if (type === 'info') {
+                icon = '<i class="fa-solid fa-circle-info text-indigo-400 text-base"></i>';
+            }
+            
+            toast.innerHTML = `
+                <div class="text-xs font-semibold flex items-center gap-2.5">
+                    ${icon}
+                    <span class="text-slate-200 leading-normal">${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-3', 'opacity-0');
+            }, 50);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-3', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
 
         // Switch main tabs
         function switchTab(tabId) {
@@ -556,7 +647,6 @@
                 }
             });
             
-            // Force redraw of charts if switching to dashboard
             if (tabId === 'dashboard') {
                 updateStats();
             }
@@ -585,9 +675,10 @@
             const el = document.getElementById(elementId);
             const text = el.innerText || el.textContent;
             navigator.clipboard.writeText(text).then(() => {
-                alert('Command copied to clipboard!');
+                showToast('Configuration command copied to clipboard!', 'success');
             }).catch(err => {
                 console.error('Failed to copy command: ', err);
+                showToast('Failed to copy command automatically.', 'error');
             });
         }
 
@@ -620,7 +711,7 @@
                 }
             });
 
-            // Parse sizes to float for comparison (simplified)
+            // Parse sizes to float for comparison
             const parseToMB = (str) => {
                 if (!str) return 0;
                 const match = str.match(/([\d\.]+)\s*(\w+)/);
@@ -630,7 +721,7 @@
                 if (unit.includes('gb')) return val * 1024;
                 if (unit.includes('kb')) return val / 1024;
                 if (unit.includes('mib') || unit.includes('mb')) return val;
-                return val / (1024 * 1024); // default bytes
+                return val / (1024 * 1024);
             };
 
             // 2. Bandwidth Served vs Fetched Chart
@@ -663,7 +754,7 @@
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.05)'
+                                color: 'rgba(255, 255, 255, 0.04)'
                             },
                             ticks: {
                                 color: '#94a3b8',
@@ -709,7 +800,7 @@
                     // Service Online/Offline status
                     const statusBadge = document.getElementById('status-badge');
                     if (data.status === 'online') {
-                        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online`;
+                        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span> Online`;
                         statusBadge.className = 'font-semibold flex items-center gap-1.5 text-emerald-400';
                     } else {
                         statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Offline`;
@@ -719,7 +810,10 @@
                     const cStats = data.cacher_stats || {};
                     
                     // Update main cards
-                    document.getElementById('stat-hit-rate').innerText = `${cStats.hit_rate_pct ? cStats.hit_rate_pct.toFixed(2) : '0.00'}%`;
+                    const hr = cStats.hit_rate_pct || 0;
+                    document.getElementById('stat-hit-rate').innerText = `${hr.toFixed(2)}%`;
+                    document.getElementById('stat-hit-rate-bar').style.width = `${hr}%`;
+                    
                     document.getElementById('stat-served').innerText = cStats.served_startup || '0 B';
                     document.getElementById('stat-fetched').innerText = cStats.fetched_startup || '0 B';
                     
@@ -727,33 +821,33 @@
                     document.getElementById('stat-saved').innerText = cStats.hits_data || '0.00 MiB';
 
                     // Update hit/miss counts on dashboard labels
-                    document.getElementById('chart-label-hits').innerText = `${cStats.hits_count || 0} (${cStats.hit_rate_pct ? cStats.hit_rate_pct.toFixed(1) : 0}%)`;
-                    document.getElementById('chart-label-misses').innerText = `${cStats.misses_count || 0} (${cStats.hit_rate_pct ? (100 - cStats.hit_rate_pct).toFixed(1) : 100}%)`;
+                    document.getElementById('chart-label-hits').innerText = `${cStats.hits_count || 0} (${hr.toFixed(1)}%)`;
+                    document.getElementById('chart-label-misses').innerText = `${cStats.misses_count || 0} (${(100 - hr).toFixed(1)}%)`;
 
                     // Update Top Clients list
                     const topClientsTbody = document.getElementById('top-clients-list');
                     if (data.top_clients && data.top_clients.length > 0) {
                         topClientsTbody.innerHTML = data.top_clients.map(c => `
-                            <tr>
-                                <td class="py-3 font-semibold text-slate-300"><i class="fa-solid fa-laptop text-xs text-indigo-400 mr-2"></i> ${c.ip}</td>
-                                <td class="py-3 text-right font-medium text-emerald-400">${c.formatted}</td>
+                            <tr class="hover:bg-slate-850/25 transition-colors">
+                                <td class="py-3.5 font-semibold text-slate-300"><i class="fa-solid fa-laptop text-xs text-indigo-400 mr-2"></i> ${c.ip}</td>
+                                <td class="py-3.5 text-right font-medium text-emerald-400">${c.formatted}</td>
                             </tr>
                         `).join('');
                     } else {
-                        topClientsTbody.innerHTML = `<tr><td class="py-3 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td></tr>`;
+                        topClientsTbody.innerHTML = `<tr><td class="py-4 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td></tr>`;
                     }
 
                     // Update Top Repos list
                     const topReposTbody = document.getElementById('top-repos-list');
                     if (data.top_repos && data.top_repos.length > 0) {
                         topReposTbody.innerHTML = data.top_repos.map(r => `
-                            <tr>
-                                <td class="py-3 font-semibold text-slate-300"><i class="fa-regular fa-folder-open text-xs text-purple-400 mr-2"></i> ${r.repo}</td>
-                                <td class="py-3 text-right font-medium text-purple-400">${r.count} requests</td>
+                            <tr class="hover:bg-slate-850/25 transition-colors">
+                                <td class="py-3.5 font-semibold text-slate-300"><i class="fa-regular fa-folder-open text-xs text-purple-400 mr-2"></i> ${r.repo}</td>
+                                <td class="py-3.5 text-right font-medium text-purple-400">${r.count} requests</td>
                             </tr>
                         `).join('');
                     } else {
-                        topReposTbody.innerHTML = `<tr><td class="py-3 text-slate-400" colspan="2">No requests logged yet.</td></tr>`;
+                        topReposTbody.innerHTML = `<tr><td class="py-4 text-slate-400" colspan="2">No requests logged yet.</td></tr>`;
                     }
 
                     // Update Logs view
@@ -792,32 +886,35 @@
             if (filtered.length > 0) {
                 logsTbody.innerHTML = filtered.map(log => {
                     let badgeClass = '';
+                    let badgeIcon = '';
                     if (log.type === 'I') {
                         badgeClass = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                        badgeIcon = '<i class="fa-solid fa-arrow-down-long text-[9px] mr-1"></i>';
                     } else if (log.type === 'O') {
                         badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+                        badgeIcon = '<i class="fa-solid fa-arrow-up-long text-[9px] mr-1"></i>';
                     } else {
                         badgeClass = 'bg-slate-700/20 text-slate-400 border-slate-700/35';
                     }
 
                     return `
                         <tr class="hover:bg-slate-850/40 transition-colors">
-                            <td class="py-3 font-medium text-slate-400">${log.timestamp}</td>
+                            <td class="py-3 font-medium text-slate-400 pl-2">${log.timestamp}</td>
                             <td class="py-3 font-semibold text-slate-200">${log.client_ip}</td>
                             <td class="py-3">
-                                <span class="px-2 py-0.5 rounded-full border text-[10px] font-bold ${badgeClass}">
-                                    ${log.type_desc}
+                                <span class="px-2.5 py-0.5 rounded-full border text-[9px] font-bold flex items-center w-max ${badgeClass}">
+                                    ${badgeIcon}${log.type_desc}
                                 </span>
                             </td>
                             <td class="py-3 font-mono text-slate-300 break-all select-all pr-4" title="${log.path}">
                                 ${log.path}
                             </td>
-                            <td class="py-3 text-right font-medium text-slate-200">${log.size}</td>
+                            <td class="py-3 text-right font-medium text-slate-200 pr-2">${log.size}</td>
                         </tr>
                     `;
                 }).join('');
             } else {
-                logsTbody.innerHTML = `<tr><td class="py-4 text-center text-slate-500" colspan="5">No matching logs found.</td></tr>`;
+                logsTbody.innerHTML = `<tr><td class="py-6 text-center text-slate-500" colspan="5">No matching logs found.</td></tr>`;
             }
         }
 
@@ -841,15 +938,17 @@
             .then(data => {
                 if (action === 'count') {
                     document.getElementById('btn-force-recount').disabled = false;
-                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator"></i> Re-count Stats`;
+                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator text-indigo-200"></i> Re-count Stats`;
                     updateStats();
-                    alert(data.message || 'Action executed.');
+                    showToast(data.message || 'Statistics re-counted successfully.', 'success');
                 } else {
                     if (data.success) {
+                        showToast(`Background job started: ${action.replace('_', ' ')}`, 'info');
                         startMaintenancePolling();
                     } else {
                         document.getElementById('maintenance-loader').classList.add('hidden');
                         document.getElementById('maintenance-console').innerHTML += `\n[Error] ${data.error}\n`;
+                        showToast(data.error || 'Failed to start maintenance job.', 'error');
                     }
                 }
             })
@@ -857,8 +956,9 @@
                 console.error("Action error:", err);
                 if (action === 'count') {
                     document.getElementById('btn-force-recount').disabled = false;
-                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator"></i> Re-count Stats`;
+                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator text-indigo-200"></i> Re-count Stats`;
                 }
+                showToast('Failed to connect to proxy backend.', 'error');
             });
         }
 
@@ -886,6 +986,7 @@
                         } else {
                             isMaintenancePolling = false;
                             document.getElementById('maintenance-loader').classList.add('hidden');
+                            showToast('Maintenance task completed successfully.', 'success');
                             updateStats(); // refresh stats once done
                         }
                     })
@@ -899,30 +1000,39 @@
             poll();
         }
 
-        // Restart Service
-        function restartService() {
-            if (!confirm("Are you sure you want to restart the Apt-Cacher NG daemon? This will drop current client downloads.")) return;
-            
+        // Restart Service Dialog Controls
+        function openRestartModal() {
+            document.getElementById('restart-modal').classList.remove('hidden');
+        }
+
+        function closeRestartModal() {
+            document.getElementById('restart-modal').classList.add('hidden');
+        }
+
+        function confirmRestartService() {
+            closeRestartModal();
             const btn = document.getElementById('btn-restart');
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Restarting...`;
             
+            showToast('Initiating Apt-Cacher NG service restart...', 'info');
+
             fetch('/api/restart-service', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Restart Service`;
+                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate text-amber-400"></i> Restart Service`;
                 if (data.success) {
-                    alert(data.message);
+                    showToast('Apt-Cacher NG service restarted successfully.', 'success');
                     updateStats();
                 } else {
-                    alert("Error: " + data.error);
+                    showToast("Error: " + data.error, 'error');
                 }
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Restart Service`;
-                alert("Error restarting service: " + err);
+                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate text-amber-400"></i> Restart Service`;
+                showToast("Error restarting service: " + err, 'error');
             });
         }
 
