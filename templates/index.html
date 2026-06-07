@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Apt-Cacher NG Premium Web Dashboard - Monitor package caching efficiency, bandwidth saved, active clients, and run maintenance tasks.">
+    <title>Apt-Cacher NG | Modern Caching Control Center</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 40%, #1e1b4b 100%);
+            background-attachment: fixed;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .tab-btn {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Header Section -->
+    <header class="glass sticky top-0 z-40 border-b border-slate-800/80 px-6 py-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Logo & Brand -->
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <i class="fa-solid fa-server text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 id="main-title" class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-100 bg-clip-text text-transparent">Apt-Cacher NG</h1>
+                    <p class="text-xs text-slate-400 font-medium flex items-center gap-2">
+                        <span>LXC Container Gateway</span>
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="cacher-ip">192.168.1.199:3142</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Status & Quick Controls -->
+            <div class="flex items-center gap-4 flex-wrap">
+                <div class="px-3 py-1.5 rounded-full glass border border-slate-800 flex items-center gap-2 text-xs">
+                    <span class="text-slate-400">Server Status:</span>
+                    <span id="status-badge" class="font-semibold flex items-center gap-1.5 text-emerald-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online
+                    </span>
+                </div>
+                
+                <button id="btn-restart" onclick="restartService()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 hover:border-slate-600 transition-all text-xs font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i> Restart Service
+                </button>
+                
+                <button id="btn-force-recount" onclick="triggerAction('count')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all text-xs font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-calculator"></i> Re-count Stats
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-8">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-slate-800 mb-8 overflow-x-auto gap-8">
+            <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn active text-sm font-semibold tracking-wide text-indigo-400 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </button>
+            <button id="tab-logs" onclick="switchTab('logs')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-list-ul"></i> Live Logs
+            </button>
+            <button id="tab-maintenance" onclick="switchTab('maintenance')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance
+            </button>
+            <button id="tab-setup" onclick="switchTab('setup')" class="tab-btn text-sm font-semibold tracking-wide text-slate-400 hover:text-slate-200 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info"></i> Client Setup Guide
+            </button>
+        </div>
+
+        <!-- 1. DASHBOARD VIEW -->
+        <div id="view-dashboard" class="space-y-8">
+            
+            <!-- Highlight Statistics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Hit Rate Card -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cache Hit Rate</span>
+                        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <i class="fa-solid fa-percent text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-hit-rate" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-200 to-indigo-100 bg-clip-text text-transparent">0.00%</span>
+                        <p class="text-xs text-slate-400 mt-1">Based on package requests</p>
+                    </div>
+                </div>
+
+                <!-- Bandwidth Saved Card -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bandwidth Saved</span>
+                        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-saved" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-200 to-emerald-100 bg-clip-text text-transparent">0.00 MiB</span>
+                        <p class="text-xs text-slate-400 mt-1">Data served from local cache</p>
+                    </div>
+                </div>
+
+                <!-- Total Served Card -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Served</span>
+                        <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            <i class="fa-solid fa-share text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-served" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-200 to-purple-100 bg-clip-text text-transparent">0 B</span>
+                        <p class="text-xs text-slate-400 mt-1">Served to local client machines</p>
+                    </div>
+                </div>
+
+                <!-- Total Fetched Card -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Upstream Fetched</span>
+                        <div class="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                            <i class="fa-solid fa-arrow-down-up-lock text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-fetched" class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-200 to-rose-100 bg-clip-text text-transparent">0 B</span>
+                        <p class="text-xs text-slate-400 mt-1">Downloaded from internet mirrors</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Analytics Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Doughnut Chart (Hit vs Miss) -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col lg:col-span-1">
+                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Cache Hit vs Miss</h3>
+                    <div class="flex-grow flex items-center justify-center min-h-[200px] relative">
+                        <canvas id="chart-hit-miss"></canvas>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 text-center text-xs border-t border-slate-800 pt-4">
+                        <div>
+                            <span class="text-slate-400">Hits Count</span>
+                            <p id="chart-label-hits" class="text-base font-bold text-indigo-400">0</p>
+                        </div>
+                        <div class="border-l border-slate-800">
+                            <span class="text-slate-400">Misses Count</span>
+                            <p id="chart-label-misses" class="text-base font-bold text-purple-400">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar Chart (Data flow details) -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col lg:col-span-2">
+                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Bandwidth Distribution (Served vs Fetched)</h3>
+                    <div class="flex-grow min-h-[220px] relative">
+                        <canvas id="chart-bandwidth"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid: Top Clients & Repos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Top Clients -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Top Client Nodes</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-slate-400 border-b border-slate-800/80">
+                                    <th class="pb-3 font-medium">IP Address</th>
+                                    <th class="pb-3 font-medium text-right">Data Cached</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-clients-list" class="divide-y divide-slate-800/50 text-sm">
+                                <tr>
+                                    <td class="py-3 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Repositories -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">Top Repositories Requested</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-slate-400 border-b border-slate-800/80">
+                                    <th class="pb-3 font-medium">Repository Mirror</th>
+                                    <th class="pb-3 font-medium text-right">Request Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-repos-list" class="divide-y divide-slate-800/50 text-sm">
+                                <tr>
+                                    <td class="py-3 text-slate-400" colspan="2">No requests logged yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LIVE LOGS VIEW -->
+        <div id="view-logs" class="hidden glass-card rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-200">Recent Proxy Activity</h2>
+                    <p class="text-xs text-slate-400 mt-1">Real-time package requests passing through the cache server</p>
+                </div>
+                <div class="relative w-full md:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+                    <input id="log-search" oninput="filterLogs()" type="text" placeholder="Search logs (IP, package, etc.)..." class="w-full pl-9 pr-4 py-1.5 rounded-xl bg-slate-850 border border-slate-700/60 focus:outline-none focus:border-indigo-500 transition-all text-xs text-slate-200 placeholder-slate-500">
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-xs text-slate-400 border-b border-slate-850 uppercase tracking-wider">
+                            <th class="pb-3 font-semibold">Timestamp</th>
+                            <th class="pb-3 font-semibold">Client IP</th>
+                            <th class="pb-3 font-semibold">Type</th>
+                            <th class="pb-3 font-semibold">Package / Path</th>
+                            <th class="pb-3 font-semibold text-right">Size</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody" class="divide-y divide-slate-850 text-xs">
+                        <tr>
+                            <td class="py-4 text-center text-slate-400" colspan="5">No logs available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. MAINTENANCE VIEW -->
+        <div id="view-maintenance" class="hidden space-y-8">
+            <!-- Action Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Expiration -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-broom-ball"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-200">Expiration & Cleanup</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Scan the entire cache directory, check metadata, and remove package versions that are no longer referenced by index files.
+                        </p>
+                    </div>
+                    <button id="btn-expire" onclick="triggerAction('expire')" class="mt-6 w-full py-2 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs tracking-wider transition-all shadow-md shadow-violet-600/20 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-play"></i> Start Expiration
+                    </button>
+                </div>
+
+                <!-- Unreferenced Packages -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-trash-can-arrow-up"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-200">Unreferenced Files</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Scan for packages downloaded but not indexed. You can safely inspect these files or delete them to reclaim disk space.
+                        </p>
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 gap-3">
+                        <button id="btn-show-unref" onclick="triggerAction('show_unreferenced')" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Show
+                        </button>
+                        <button id="btn-remove-unref" onclick="triggerAction('remove_unreferenced')" class="py-2 px-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-pink-600/15">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Damaged Packages -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-200">Damaged Package Check</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Scan the cache for files that have been corrupted, truncated, or do not match upstream checksums. You can delete or rebuild them.
+                        </p>
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 gap-3">
+                        <button id="btn-show-dmg" onclick="triggerAction('show_damaged')" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Show
+                        </button>
+                        <button id="btn-remove-dmg" onclick="triggerAction('remove_damaged')" class="py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-amber-600/15">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal output logs -->
+            <div class="glass-card rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80">
+                <div class="bg-slate-950 px-4 py-3 flex items-center justify-between border-b border-slate-900">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span class="ml-2 text-xs font-semibold text-slate-400 font-mono tracking-wider">maintenance_console.sh</span>
+                    </div>
+                    <span id="maintenance-loader" class="hidden text-xs text-indigo-400 flex items-center gap-2 font-semibold">
+                        <svg class="animate-spin h-3.5 w-3.5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Job Executing...
+                    </span>
+                </div>
+                <div id="maintenance-console" class="bg-slate-950 p-6 font-mono text-xs text-emerald-400/90 h-[350px] overflow-y-auto terminal-scroll leading-relaxed">
+                    [System Status] Console ready. Select a maintenance action above to run it.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. CLIENT SETUP VIEW -->
+        <div id="view-setup" class="hidden space-y-8">
+            <div class="glass-card p-6 rounded-2xl">
+                <h2 class="text-lg font-bold text-slate-200 mb-2">How to Use This Caching Server</h2>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    To save bandwidth and speed up updates across your Proxmox environment, you must configure your client VMs, LXCs, or the Proxmox host itself to route their package requests through this server.
+                </p>
+            </div>
+
+            <!-- Tabs by OS -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- OS Nav -->
+                <div class="md:col-span-1 flex flex-col gap-2">
+                    <button id="btn-setup-debian" onclick="switchSetupOS('debian')" class="px-4 py-3 rounded-xl bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/15 border border-indigo-500/20 text-left font-bold text-sm transition-all flex items-center gap-2">
+                        <i class="fa-brands fa-debian text-base"></i> Debian / Ubuntu / PVE
+                    </button>
+                    <button id="btn-setup-alpine" onclick="switchSetupOS('alpine')" class="px-4 py-3 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-leaf text-base"></i> Alpine Linux
+                    </button>
+                    <button id="btn-setup-rpm" onclick="switchSetupOS('rpm')" class="px-4 py-3 rounded-xl bg-slate-850 hover:bg-slate-800/80 border border-slate-700/50 text-left font-semibold text-slate-300 hover:text-slate-200 text-sm transition-all flex items-center gap-2">
+                        <i class="fa-brands fa-redhat text-base"></i> Rocky / Alma / CentOS
+                    </button>
+                </div>
+
+                <!-- OS Guides content -->
+                <div class="md:col-span-3 glass-card p-6 rounded-2xl min-h-[300px]">
+                    <!-- DEBIAN/UBUNTU -->
+                    <div id="setup-guide-debian" class="space-y-6">
+                        <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-brands fa-debian text-indigo-400"></i> Debian / Ubuntu / Proxmox VE Configuration
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Debian-based systems can be configured cleanly by creating a dedicated proxy configuration file. This forces APT to fetch all HTTP packages via the caching server.
+                        </p>
+                        
+                        <div class="space-y-3">
+                            <label class="text-xs font-semibold text-slate-300">Run this single command as root on your client nodes:</label>
+                            <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
+                                <pre id="cmd-debian" class="whitespace-pre-wrap break-all">echo 'Acquire::http::Proxy "http://192.168.1.199:3142";' > /etc/apt/apt.conf.d/00aptproxy</pre>
+                                <button onclick="copyToClipboard('cmd-debian')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="text-xs font-semibold text-slate-300">Then run updates as usual. The cache will start building:</label>
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-emerald-400">
+                                apt-get update && apt-get upgrade -y
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-xs text-slate-400 leading-relaxed">
+                            <i class="fa-solid fa-circle-info text-indigo-400 mr-1"></i>
+                            <strong>Note:</strong> APT package verification uses cryptographic signatures (`Release.gpg` keys). Routing packages through this proxy is completely secure since package integrity is checked by the client itself.
+                        </div>
+                    </div>
+
+                    <!-- ALPINE -->
+                    <div id="setup-guide-alpine" class="space-y-6 hidden">
+                        <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-leaf text-emerald-400"></i> Alpine Linux Configuration
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Alpine Linux uses the APK package manager. To route its downloads through Apt-Cacher NG, configure the `http_proxy` environment variable or edit the default mirrors to use HTTP.
+                        </p>
+
+                        <div class="space-y-3">
+                            <label class="text-xs font-semibold text-slate-300">Option A: Run one-off package updates using the proxy variable:</label>
+                            <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
+                                <pre id="cmd-alpine-var" class="whitespace-pre-wrap break-all">http_proxy=http://192.168.1.199:3142 apk update && apk upgrade</pre>
+                                <button onclick="copyToClipboard('cmd-alpine-var')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="text-xs font-semibold text-slate-300">Option B: Configure a permanent proxy in Alpine shell profile:</label>
+                            <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
+                                <pre id="cmd-alpine-perm" class="whitespace-pre-wrap break-all">echo 'export http_proxy=http://192.168.1.199:3142' >> /etc/profile</pre>
+                                <button onclick="copyToClipboard('cmd-alpine-perm')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RPM (REDHAT/CENTOS/ROCKY) -->
+                    <div id="setup-guide-rpm" class="space-y-6 hidden">
+                        <h3 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-brands fa-redhat text-rose-400"></i> Rocky / Alma / CentOS Configuration
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            YUM and DNF use a proxy parameter inside their configurations.
+                        </p>
+
+                        <div class="space-y-3">
+                            <label class="text-xs font-semibold text-slate-300">Add the proxy directive to your DNF/YUM configuration file:</label>
+                            <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-850 font-mono text-xs text-indigo-300">
+                                <pre id="cmd-rpm" class="whitespace-pre-wrap break-all">echo 'proxy=http://192.168.1.199:3142' >> /etc/dnf/dnf.conf</pre>
+                                <button onclick="copyToClipboard('cmd-rpm')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-all text-sm" title="Copy to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                            <span class="text-xs text-slate-500">Note: On older installations, edit `/etc/yum.conf` instead.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 border-t border-slate-800/60 glass text-center text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-6">
+            Apt-Cacher NG Caching Proxy Dashboard • Running on Proxmox LXC Container
+        </div>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        let hitMissChart = null;
+        let bandwidthChart = null;
+        let pollingInterval = null;
+        let isMaintenancePolling = false;
+        let currentLogs = [];
+
+        // Fetch container IP on load
+        const containerIp = window.location.hostname;
+        document.getElementById('cacher-ip').innerText = `${containerIp}:3142`;
+        
+        // Update client guide copy commands with current IP
+        document.getElementById('cmd-debian').innerText = `echo 'Acquire::http::Proxy "http://${containerIp}:3142";' > /etc/apt/apt.conf.d/00aptproxy`;
+        document.getElementById('cmd-alpine-var').innerText = `http_proxy=http://${containerIp}:3142 apk update && apk upgrade`;
+        document.getElementById('cmd-alpine-perm').innerText = `echo 'export http_proxy=http://${containerIp}:3142' >> /etc/profile`;
+        document.getElementById('cmd-rpm').innerText = `echo 'proxy=http://${containerIp}:3142' >> /etc/dnf/dnf.conf`;
+
+        // Switch main tabs
+        function switchTab(tabId) {
+            const views = ['view-dashboard', 'view-logs', 'view-maintenance', 'view-setup'];
+            const tabs = ['tab-dashboard', 'tab-logs', 'tab-maintenance', 'tab-setup'];
+            
+            views.forEach(view => {
+                if(view === `view-${tabId}`) {
+                    document.getElementById(view).classList.remove('hidden');
+                } else {
+                    document.getElementById(view).classList.add('hidden');
+                }
+            });
+
+            tabs.forEach(tab => {
+                const el = document.getElementById(tab);
+                if(tab === `tab-${tabId}`) {
+                    el.classList.add('active', 'text-indigo-400');
+                    el.classList.remove('text-slate-400');
+                } else {
+                    el.classList.remove('active', 'text-indigo-400');
+                    el.classList.add('text-slate-400');
+                }
+            });
+            
+            // Force redraw of charts if switching to dashboard
+            if (tabId === 'dashboard') {
+                updateStats();
+            }
+        }
+
+        // Switch OS in client setup guide
+        function switchSetupOS(osId) {
+            const guides = ['debian', 'alpine', 'rpm'];
+            guides.forEach(g => {
+                const el = document.getElementById(`setup-guide-${g}`);
+                const btn = document.getElementById(`btn-setup-${g}`);
+                if (g === osId) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('bg-indigo-600/10', 'text-indigo-400', 'border-indigo-500/20');
+                    btn.classList.remove('bg-slate-850', 'text-slate-300');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('bg-indigo-600/10', 'text-indigo-400', 'border-indigo-500/20');
+                    btn.classList.add('bg-slate-850', 'text-slate-300');
+                }
+            });
+        }
+
+        // Copy setup command to clipboard
+        function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            const text = el.innerText || el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Command copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy command: ', err);
+            });
+        }
+
+        // Initialize Charts
+        function initCharts(hitCount, missCount, fetchedStartup, servedStartup, fetchedRecent, servedRecent) {
+            // 1. Hit/Miss Chart
+            const ctxHitMiss = document.getElementById('chart-hit-miss').getContext('2d');
+            if (hitMissChart) hitMissChart.destroy();
+            
+            hitMissChart = new Chart(ctxHitMiss, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hits', 'Misses'],
+                    datasets: [{
+                        data: [hitCount, missCount],
+                        backgroundColor: ['#6366f1', '#a855f7'],
+                        borderWidth: 2,
+                        borderColor: '#0f172a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    cutout: '75%'
+                }
+            });
+
+            // Parse sizes to float for comparison (simplified)
+            const parseToMB = (str) => {
+                if (!str) return 0;
+                const match = str.match(/([\d\.]+)\s*(\w+)/);
+                if (!match) return 0;
+                const val = parseFloat(match[1]);
+                const unit = match[2].toLowerCase();
+                if (unit.includes('gb')) return val * 1024;
+                if (unit.includes('kb')) return val / 1024;
+                if (unit.includes('mib') || unit.includes('mb')) return val;
+                return val / (1024 * 1024); // default bytes
+            };
+
+            // 2. Bandwidth Served vs Fetched Chart
+            const ctxBandwidth = document.getElementById('chart-bandwidth').getContext('2d');
+            if (bandwidthChart) bandwidthChart.destroy();
+
+            bandwidthChart = new Chart(ctxBandwidth, {
+                type: 'bar',
+                data: {
+                    labels: ['Since Startup', 'Recent History'],
+                    datasets: [
+                        {
+                            label: 'Data Served',
+                            data: [parseToMB(servedStartup), parseToMB(servedRecent)],
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Data Fetched',
+                            data: [parseToMB(fetchedStartup), parseToMB(fetchedRecent)],
+                            backgroundColor: '#ec4899',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    size: 10
+                                },
+                                callback: function(value) {
+                                    return value + ' MB';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#cbd5e1',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch data and update UI
+        function updateStats() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    // Service Online/Offline status
+                    const statusBadge = document.getElementById('status-badge');
+                    if (data.status === 'online') {
+                        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online`;
+                        statusBadge.className = 'font-semibold flex items-center gap-1.5 text-emerald-400';
+                    } else {
+                        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Offline`;
+                        statusBadge.className = 'font-semibold flex items-center gap-1.5 text-rose-500';
+                    }
+
+                    const cStats = data.cacher_stats || {};
+                    
+                    // Update main cards
+                    document.getElementById('stat-hit-rate').innerText = `${cStats.hit_rate_pct ? cStats.hit_rate_pct.toFixed(2) : '0.00'}%`;
+                    document.getElementById('stat-served').innerText = cStats.served_startup || '0 B';
+                    document.getElementById('stat-fetched').innerText = cStats.fetched_startup || '0 B';
+                    
+                    // Saved bandwidth calculation
+                    document.getElementById('stat-saved').innerText = cStats.hits_data || '0.00 MiB';
+
+                    // Update hit/miss counts on dashboard labels
+                    document.getElementById('chart-label-hits').innerText = `${cStats.hits_count || 0} (${cStats.hit_rate_pct ? cStats.hit_rate_pct.toFixed(1) : 0}%)`;
+                    document.getElementById('chart-label-misses').innerText = `${cStats.misses_count || 0} (${cStats.hit_rate_pct ? (100 - cStats.hit_rate_pct).toFixed(1) : 100}%)`;
+
+                    // Update Top Clients list
+                    const topClientsTbody = document.getElementById('top-clients-list');
+                    if (data.top_clients && data.top_clients.length > 0) {
+                        topClientsTbody.innerHTML = data.top_clients.map(c => `
+                            <tr>
+                                <td class="py-3 font-semibold text-slate-300"><i class="fa-solid fa-laptop text-xs text-indigo-400 mr-2"></i> ${c.ip}</td>
+                                <td class="py-3 text-right font-medium text-emerald-400">${c.formatted}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        topClientsTbody.innerHTML = `<tr><td class="py-3 text-slate-400" colspan="2">No client data cached yet. Use the setup guide to link clients.</td></tr>`;
+                    }
+
+                    // Update Top Repos list
+                    const topReposTbody = document.getElementById('top-repos-list');
+                    if (data.top_repos && data.top_repos.length > 0) {
+                        topReposTbody.innerHTML = data.top_repos.map(r => `
+                            <tr>
+                                <td class="py-3 font-semibold text-slate-300"><i class="fa-regular fa-folder-open text-xs text-purple-400 mr-2"></i> ${r.repo}</td>
+                                <td class="py-3 text-right font-medium text-purple-400">${r.count} requests</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        topReposTbody.innerHTML = `<tr><td class="py-3 text-slate-400" colspan="2">No requests logged yet.</td></tr>`;
+                    }
+
+                    // Update Logs view
+                    currentLogs = data.recent_logs || [];
+                    filterLogs();
+
+                    // Refresh Charts
+                    initCharts(
+                        cStats.hits_count || 0,
+                        cStats.misses_count || 0,
+                        cStats.fetched_startup,
+                        cStats.served_startup,
+                        cStats.fetched_recent,
+                        cStats.served_recent
+                    );
+
+                    // Check if maintenance is active
+                    if (data.maintenance_running && !isMaintenancePolling) {
+                        startMaintenancePolling();
+                    }
+                })
+                .catch(err => console.error("Error fetching stats:", err));
+        }
+
+        // Filter recent logs based on search input
+        function filterLogs() {
+            const query = document.getElementById('log-search').value.toLowerCase().trim();
+            const logsTbody = document.getElementById('logs-tbody');
+            
+            const filtered = currentLogs.filter(log => {
+                return log.client_ip.toLowerCase().includes(query) ||
+                       log.path.toLowerCase().includes(query) ||
+                       log.type_desc.toLowerCase().includes(query);
+            });
+
+            if (filtered.length > 0) {
+                logsTbody.innerHTML = filtered.map(log => {
+                    let badgeClass = '';
+                    if (log.type === 'I') {
+                        badgeClass = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                    } else if (log.type === 'O') {
+                        badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+                    } else {
+                        badgeClass = 'bg-slate-700/20 text-slate-400 border-slate-700/35';
+                    }
+
+                    return `
+                        <tr class="hover:bg-slate-850/40 transition-colors">
+                            <td class="py-3 font-medium text-slate-400">${log.timestamp}</td>
+                            <td class="py-3 font-semibold text-slate-200">${log.client_ip}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-0.5 rounded-full border text-[10px] font-bold ${badgeClass}">
+                                    ${log.type_desc}
+                                </span>
+                            </td>
+                            <td class="py-3 font-mono text-slate-300 break-all select-all pr-4" title="${log.path}">
+                                ${log.path}
+                            </td>
+                            <td class="py-3 text-right font-medium text-slate-200">${log.size}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                logsTbody.innerHTML = `<tr><td class="py-4 text-center text-slate-500" colspan="5">No matching logs found.</td></tr>`;
+            }
+        }
+
+        // Trigger maintenance or administrative action
+        function triggerAction(action) {
+            if (action === 'count') {
+                document.getElementById('btn-force-recount').disabled = true;
+                document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Re-counting...`;
+            } else {
+                switchTab('maintenance');
+                document.getElementById('maintenance-loader').classList.remove('hidden');
+                document.getElementById('maintenance-console').innerHTML = `[System Status] Launching task: ${action.toUpperCase()}...\n`;
+            }
+
+            fetch('/api/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (action === 'count') {
+                    document.getElementById('btn-force-recount').disabled = false;
+                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator"></i> Re-count Stats`;
+                    updateStats();
+                    alert(data.message || 'Action executed.');
+                } else {
+                    if (data.success) {
+                        startMaintenancePolling();
+                    } else {
+                        document.getElementById('maintenance-loader').classList.add('hidden');
+                        document.getElementById('maintenance-console').innerHTML += `\n[Error] ${data.error}\n`;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Action error:", err);
+                if (action === 'count') {
+                    document.getElementById('btn-force-recount').disabled = false;
+                    document.getElementById('btn-force-recount').innerHTML = `<i class="fa-solid fa-calculator"></i> Re-count Stats`;
+                }
+            });
+        }
+
+        // Poll maintenance progress
+        function startMaintenancePolling() {
+            if (isMaintenancePolling) return;
+            isMaintenancePolling = true;
+            document.getElementById('maintenance-loader').classList.remove('hidden');
+            
+            const poll = () => {
+                fetch('/api/maintenance-status')
+                    .then(res => res.json())
+                    .then(data => {
+                        const consoleEl = document.getElementById('maintenance-console');
+                        
+                        // Render logs
+                        if (data.output && data.output.length > 0) {
+                            consoleEl.innerHTML = data.output.join('\n');
+                            // auto-scroll to bottom
+                            consoleEl.scrollTop = consoleEl.scrollHeight;
+                        }
+                        
+                        if (data.running) {
+                            setTimeout(poll, 2000);
+                        } else {
+                            isMaintenancePolling = false;
+                            document.getElementById('maintenance-loader').classList.add('hidden');
+                            updateStats(); // refresh stats once done
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error polling maintenance:", err);
+                        isMaintenancePolling = false;
+                        document.getElementById('maintenance-loader').classList.add('hidden');
+                    });
+            };
+            
+            poll();
+        }
+
+        // Restart Service
+        function restartService() {
+            if (!confirm("Are you sure you want to restart the Apt-Cacher NG daemon? This will drop current client downloads.")) return;
+            
+            const btn = document.getElementById('btn-restart');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Restarting...`;
+            
+            fetch('/api/restart-service', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Restart Service`;
+                if (data.success) {
+                    alert(data.message);
+                    updateStats();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Restart Service`;
+                alert("Error restarting service: " + err);
+            });
+        }
+
+        // Initialize Page
+        updateStats();
+        // Poll general stats every 15 seconds
+        pollingInterval = setInterval(updateStats, 15000);
+    </script>
+</body>
+</html>
